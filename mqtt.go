@@ -114,7 +114,7 @@ func maskBytes(key []byte, pos int, b []byte) int {
 }
 
 func (fh FH) String() string {
-	return fmt.Sprintf("T:%s Q:%d L:%d", packetNames[fh.T], fh.Q, fh.L)
+	return fmt.Sprintf("Q:%d L:%d", fh.Q, fh.L)
 }
 
 func read2(r *bufio.Reader) (int, error) {
