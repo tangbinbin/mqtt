@@ -268,6 +268,8 @@ func (fh *FH) encode() []byte {
 			break
 		}
 	}
+	data := make([]byte, w.Len())
+	copy(data, w.Bytes())
 	return w.Bytes()
 }
 
@@ -355,12 +357,6 @@ func decodeString(r *bufio.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	/*
-		w := bytePool.Get().(*bytes.Buffer)
-		defer resetBytePool(w)
-		_, err = io.CopyN(w, r, int64(l))
-		return string(w.Bytes()), err
-	*/
 	b := make([]byte, l)
 	_, err = io.ReadFull(r, b)
 	return string(b), err
@@ -371,12 +367,6 @@ func decodeBytes(r *bufio.Reader) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	/*
-		w := bytePool.Get().(*bytes.Buffer)
-		defer resetBytePool(w)
-		_, err = io.CopyN(w, r, int64(l))
-		return w.Bytes(), err
-	*/
 	b := make([]byte, l)
 	_, err = io.ReadFull(r, b)
 	return b, err
@@ -468,6 +458,8 @@ func (p *ConnectP) Encode() []byte {
 			byte(len(p.Password))})
 		w.Write(p.Password)
 	}
+	data := make([]byte, w.Len())
+	copy(data, w.Bytes())
 	return w.Bytes()
 }
 
@@ -545,13 +537,12 @@ func (p *ConnackP) String() string {
 }
 
 func (p *ConnackP) Encode() []byte {
-	w := bytePool.Get().(*bytes.Buffer)
-	defer resetBytePool(w)
-	p.L = 2
-	w.Write(p.FH.encode())
-	w.WriteByte(bTB(p.SessionPresent))
-	w.WriteByte(p.ReturnCode)
-	return w.Bytes()
+	data := make([]byte, 4)
+	data[0] = p.FH.first()
+	data[1] = 2
+	data[2] = bTB(p.SessionPresent)
+	data[3] = p.ReturnCode
+	return data
 }
 
 func (p *ConnackP) Decode(r *bufio.Reader) error {
@@ -732,7 +723,9 @@ func (p *PublishP) Encode() []byte {
 			byte(p.MID)})
 	}
 	w.Write(p.Payload)
-	return w.Bytes()
+	data := make([]byte, w.Len())
+	copy(data, w.Bytes())
+	return data
 }
 
 func (p *PublishP) Decode(r *bufio.Reader) (err error) {
@@ -750,15 +743,6 @@ func (p *PublishP) Decode(r *bufio.Reader) (err error) {
 		}
 		length -= 2
 	}
-	/*
-		w := bytePool.Get().(*bytes.Buffer)
-		defer resetBytePool(w)
-		_, err = io.CopyN(w, r, int64(length))
-		if err != nil {
-			return
-		}
-		p.Payload = w.Bytes()
-	*/
 	p.Payload = make([]byte, length)
 	_, err = io.ReadFull(r, p.Payload)
 	return
@@ -848,7 +832,9 @@ func (p *SubackP) Encode() []byte {
 		byte(p.MID >> 8),
 		byte(p.MID)})
 	w.Write(p.GrantedQoss)
-	return w.Bytes()
+	data := make([]byte, w.Len())
+	copy(data, w.Bytes())
+	return data
 }
 
 func (p *SubackP) Decode(r *bufio.Reader) (err error) {
@@ -901,7 +887,9 @@ func (p *SubscribeP) Encode() []byte {
 		w.WriteString(topic)
 		w.WriteByte(p.Qoss[i])
 	}
-	return w.Bytes()
+	data := make([]byte, w.Len())
+	copy(data, w.Bytes())
+	return data
 }
 
 func (p *SubscribeP) Decode(r *bufio.Reader) (err error) {
@@ -992,7 +980,9 @@ func (p *UnsubscribeP) Encode() []byte {
 			byte(len(topic))})
 		w.WriteString(topic)
 	}
-	return w.Bytes()
+	data := make([]byte, w.Len())
+	copy(data, w.Bytes())
+	return data
 }
 
 func (p *UnsubscribeP) Decode(r *bufio.Reader) (err error) {
